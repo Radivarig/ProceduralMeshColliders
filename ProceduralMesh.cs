@@ -13,8 +13,6 @@ public class ProceduralMesh : MonoBehaviour {
 	//public Types ;
 	public Types type = Types.Prism;
 
-
-
 	public float checkEvery = 0.2f;
 
 	//base
@@ -23,31 +21,20 @@ public class ProceduralMesh : MonoBehaviour {
 	public List<PairFloat> floorValues = new List<PairFloat>();
 
 	//mesh
-	private MeshFilter mf;
 	private Mesh mesh;
 	private MeshCollider mc;
-
-	/*public Vector3[] vertices;
-	public int[] triangles;*/
 
 	void Start () {
 		InitMesh();
 		//gameObject.AddComponent<MeshRenderer>();
 		mc = gameObject.AddComponent<MeshCollider>();
+		mc.sharedMesh = mesh;
 		floorValues.Add(new PairFloat());
 	}
 
 	void InitMesh(){
-		mf = gameObject.GetComponent<MeshFilter>();
-		if (mf ==null){
-			mf = gameObject.AddComponent<MeshFilter>();
-		}
-		mesh = mf.sharedMesh;
-		if(mesh ==null){
-			mesh = new Mesh();
-			mesh.name = "procedural mesh";
-			mf.sharedMesh = mesh;
-		}
+		mesh = new Mesh();
+		mesh.name = "procedural mesh";
 	}
 
 	void Update () {
@@ -153,7 +140,8 @@ public class ProceduralMesh : MonoBehaviour {
 		return true;
 	}
 
-	void FlipNormals(Mesh mesh){
+	//reversing triangles array might also work
+	/*void FlipNormals(Mesh mesh){
 		List<int> triangles = new List<int>();
 		triangles.AddRange(mesh.triangles);
 
@@ -164,7 +152,7 @@ public class ProceduralMesh : MonoBehaviour {
 			i += 2;
 		}
 		mesh.triangles = triangles.ToArray();
-	}
+	}*/
 }
 
 [System.Serializable]
