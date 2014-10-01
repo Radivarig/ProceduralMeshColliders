@@ -14,6 +14,8 @@ public class ProceduralMesh : MonoBehaviour {
 	//public Types ;
 	public Types type = Types.Prism;
 
+
+
 	public float checkEvery = 0.2f;
 
 	//base
@@ -69,20 +71,19 @@ public class ProceduralMesh : MonoBehaviour {
 		List<Vector3> vertices = new List<Vector3>();
 
 		foreach(PairFloat floor in floorValues){
-			floor.vertices = BaseVertices(baseNumber, floor.radius, floor.height);
-			vertices.AddRange(floor.vertices);
+			vertices.AddRange(BaseVertices(baseNumber, floor.radius, floor.height));
 		}
 
-		List<int> tris = MakeTrianglesWithNextAndUp();
+		List<int> tris = MakeTrianglesWithNextAndUp(vertices.Count/floorNumber);
 
 		mesh.Clear();
 		mesh.vertices = vertices.ToArray();
 		mesh.triangles = tris.ToArray();
 	}
 
-	public List<int> MakeTrianglesWithNextAndUp(){
+	public List<int> MakeTrianglesWithNextAndUp(int floorCount){
 		List<int> tris = new List<int>();
-		int floorCount = floorValues[0].vertices.Count;
+		//int floorCount = floorValues[0].vertices.Count;
 		for (int i = 0; i < floorCount -1 ; i++){
 			for(int j = 0; j < floorNumber-1; j++){
 				int k = j*floorCount + i;
@@ -107,7 +108,7 @@ public class ProceduralMesh : MonoBehaviour {
 			tris.Add(k + floorCount);
 		}
 
-		//close bottom
+		//close top and bottom 
 		for (int i = 0; i < floorCount -1; i++){
 			tris.Add(0);
 			tris.Add(i);	
@@ -221,7 +222,6 @@ public class ProceduralMesh : MonoBehaviour {
 
 [System.Serializable]
 public class PairFloat{
-	public List<Vector3> vertices;
 	[Range(0.01f, 3f)]public float radius;
 	[Range(0, 3)] public float height;
 
