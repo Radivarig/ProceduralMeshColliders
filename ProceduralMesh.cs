@@ -1,10 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 //[ExecuteInEditMode]
 public class ProceduralMesh : MonoBehaviour {
 
 	public float checkEvery = 2f;
+
+	//base
+	[Range(3, 32)] public int baseNumber;
+	[Range(0.01f, 10f)]public float radius = 1f;
 
 	//mesh
 	private MeshFilter mf;
@@ -33,11 +38,41 @@ public class ProceduralMesh : MonoBehaviour {
 
 	void Update () {
 		if (TrueEverySeconds(checkEvery) && InspectorChanged()){
+			CreateMesh();
+			ConnectVerticesWithCenter();
 			RefreshMesh();
 
 		}
 	}
 
+	void ConnectVerticesWithCenter(){
+		List<int> tris = new List<int>();
+		for (int i = 1; i < vertices.Length -1; i++){
+			tris.Add(0);
+			tris.Add(i);
+			tris.Add(i+1);
+		}
+		tris.Add(0);
+		tris.Add(vertices.Length-1);
+		tris.Add(1);
+
+		triangles = tris.ToArray();
+	}
+
+	void CreateMesh(){
+		List<Vector3> verts = new List<Vector3>();
+		//center
+		verts.Add(Vector3.zero);
+
+		for(int i = 0; i < baseNumber; i++){
+			float radians = i * 360f/baseNumber * Mathf.Deg2Rad;
+			float x = Mathf.Cos(radians)*radius;
+			float z = Mathf.Sin(radians)*radius;
+			verts.Add(new Vector3 (x, 0f, z));
+		}
+
+		vertices = verts.ToArray();
+	}
 
 	//variable needed only for TrueEverySeconds
 	private float time = 0f;
@@ -69,21 +104,3 @@ public class ProceduralMesh : MonoBehaviour {
 		mesh.triangles = triangles;
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
