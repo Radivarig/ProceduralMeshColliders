@@ -30,7 +30,7 @@ public class ProceduralMesh : MonoBehaviour {
 		mc = gameObject.GetComponent<MeshCollider>();
 		if (mc ==null) mc = gameObject.AddComponent<MeshCollider>();
 		mc.sharedMesh = mesh;
-		floorValues.Add(new PairFloat());
+		if(floorValues.Count == 0) floorValues.Add(new PairFloat());
 	}
 
 	void InitMesh(){
