@@ -73,6 +73,14 @@ public class ProceduralMesh : MonoBehaviour {
 			vertices.AddRange(floor.vertices);
 		}
 
+		List<int> tris = MakeTrianglesWithNextAndUp();
+
+		mesh.Clear();
+		mesh.vertices = vertices.ToArray();
+		mesh.triangles = tris.ToArray();
+	}
+
+	public List<int> MakeTrianglesWithNextAndUp(){
 		List<int> tris = new List<int>();
 		int floorCount = floorValues[0].vertices.Count;
 		for (int i = 0; i < floorCount -1 ; i++){
@@ -81,13 +89,13 @@ public class ProceduralMesh : MonoBehaviour {
 				tris.Add(k + floorCount);
 				tris.Add(k + 1);
 				tris.Add(k);
-
+				
 				tris.Add(k + floorCount);
 				tris.Add(k + floorCount + 1);
 				tris.Add(k + 1);
 			}
 		}
-
+		//connect last with first
 		for(int j = 0; j < floorNumber-1; j++){
 			int k = j*floorCount + floorCount -1;
 			tris.Add(k + floorCount);	//last up
@@ -99,9 +107,19 @@ public class ProceduralMesh : MonoBehaviour {
 			tris.Add(k + floorCount);
 		}
 
-		mesh.Clear();
-		mesh.vertices = vertices.ToArray();
-		mesh.triangles = tris.ToArray();
+		//close bottom
+		for (int i = 0; i < floorCount -1; i++){
+			tris.Add(0);
+			tris.Add(i);	
+			tris.Add(i +1);	
+
+			int k = floorCount*(floorNumber-1);
+			tris.Add(i +k +1);
+			tris.Add(i +k);
+			tris.Add(0 +k);
+		}
+
+		return tris;
 	}
 
 	public void MakeNgon(bool flipNormals = false){
