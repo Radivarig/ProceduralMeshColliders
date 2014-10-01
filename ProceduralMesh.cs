@@ -5,7 +5,7 @@ using System.Collections.Generic;
 [ExecuteInEditMode]
 public class ProceduralMesh : MonoBehaviour {
 
-	public enum Types{
+	public enum Types{ 
 		Ngon,
 		Piramid,
 		Prism,
@@ -72,7 +72,7 @@ public class ProceduralMesh : MonoBehaviour {
 		List<Vector3> vertices = new List<Vector3>();
 
 		foreach(PairFloat floor in floorValues){
-			vertices.AddRange(BaseVertices(baseNumber, floor.radius, floor.height));
+			vertices.AddRange(BaseVertices(baseNumber, floor.radius, floor.position.y));
 		}
 
 		List<int> tris = MakeTrianglesWithNextAndUp(vertices.Count/floorNumber);
@@ -125,9 +125,9 @@ public class ProceduralMesh : MonoBehaviour {
 	}
 
 	public void MakeNgon(bool flipNormals = false){
-		List<Vector3> baseVerts = BaseVertices(baseNumber, floorValues[0].radius, floorValues[0].height);
+		List<Vector3> baseVerts = BaseVertices(baseNumber, floorValues[0].radius, floorValues[0].position.y);
 
-		baseVerts.Add(new Vector3(0f, floorValues[0].height, 0f));	//center
+		baseVerts.Add(new Vector3(0f, floorValues[0].position.y, 0f));	//center
 
 		List<int> tris = MakeTrianglesWithCenter(baseVerts);
 
@@ -216,11 +216,11 @@ public class ProceduralMesh : MonoBehaviour {
 
 [System.Serializable]
 public class PairFloat{
+	public Vector3 position;
 	[Range(0, 3)] public float radius;
-	[Range(0, 4)] public float height;
 
-	public PairFloat(float radius = 1f, float height = 0f){
+	public PairFloat(Vector3 position = default(Vector3), float radius = 1f){
+		this.position = position;
 		this.radius = radius;
-		this.height = height;
 	}
 }
