@@ -13,7 +13,7 @@ public class ProceduralMesh : MonoBehaviour {
 	//public Types ;
 	public Types type = Types.Prism;
 
-	public float checkEvery = 0.2f;
+	private float checkEvery = 0.2f;
 
 	//base
 	[Range(3, 32)] public int baseNumber = 3;
@@ -59,7 +59,7 @@ public class ProceduralMesh : MonoBehaviour {
 		List<Vector3> vertices = new List<Vector3>();
 
 		foreach(PairFloat floor in floorValues){
-			vertices.AddRange(BaseVertices(baseNumber, floor.radius, floor.position.y));
+			vertices.AddRange(BaseVertices(baseNumber, floor.radius, floor.position));
 		}
 
 		List<int> tris = MakeTrianglesWithNextAndUp(vertices.Count/floorValues.Count);
@@ -111,14 +111,14 @@ public class ProceduralMesh : MonoBehaviour {
 		return tris;
 	}
 	
-	List<Vector3> BaseVertices(int baseNumber, float radius = 1f, float heigth = 0f){
+	List<Vector3> BaseVertices(int baseNumber, float radius = 1f, Vector3 position = default(Vector3)){
 		List<Vector3> verts = new List<Vector3>();
 
 		for(int i = 0; i < baseNumber; i++){
 			float radians = i * 360f/baseNumber * Mathf.Deg2Rad;
 			float x = Mathf.Cos(radians)*radius;
 			float z = Mathf.Sin(radians)*radius;
-			verts.Add(new Vector3 (x, heigth, z));
+			verts.Add(new Vector3 (x + position.x, position.y, z + position.z));
 		}
 	
 		return verts;
