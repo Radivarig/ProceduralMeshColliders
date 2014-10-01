@@ -20,7 +20,6 @@ public class ProceduralMesh : MonoBehaviour {
 
 	//base
 	[Range(3, 32)] public int baseNumber = 3;
-	[Range(1, 5)] public int floorNumber = 2;
 
 	public List<PairFloat> floorValues = new List<PairFloat>();
 
@@ -53,10 +52,6 @@ public class ProceduralMesh : MonoBehaviour {
 
 	void Update () {
 		if (TrueEverySeconds(checkEvery) && InspectorChanged()){
-			while (floorValues.Count < floorNumber)
-				floorValues.Add(new PairFloat());
-			while (floorValues.Count > floorNumber)
-				floorValues.RemoveAt(floorValues.Count-1);
 
 		 	if(type == Types.Ngon) MakeNgon(true);
 		 	else if(type == Types.Prism) MakePrism();
@@ -75,7 +70,7 @@ public class ProceduralMesh : MonoBehaviour {
 			vertices.AddRange(BaseVertices(baseNumber, floor.radius, floor.position.y));
 		}
 
-		List<int> tris = MakeTrianglesWithNextAndUp(vertices.Count/floorNumber);
+		List<int> tris = MakeTrianglesWithNextAndUp(vertices.Count/floorValues.Count);
 
 		mesh.Clear();
 		mesh.vertices = vertices.ToArray();
@@ -86,7 +81,7 @@ public class ProceduralMesh : MonoBehaviour {
 		List<int> tris = new List<int>();
 		//int floorCount = floorValues[0].vertices.Count;
 		for (int i = 0; i < floorCount -1 ; i++){
-			for(int j = 0; j < floorNumber-1; j++){
+			for(int j = 0; j < floorValues.Count-1; j++){
 				int k = j*floorCount + i;
 				tris.Add(k + floorCount);
 				tris.Add(k + 1);
@@ -98,7 +93,7 @@ public class ProceduralMesh : MonoBehaviour {
 			}
 		}
 		//connect last with first
-		for(int j = 0; j < floorNumber-1; j++){
+		for(int j = 0; j < floorValues.Count-1; j++){
 			int k = j*floorCount + floorCount -1;
 			tris.Add(k + floorCount);	//last up
 			tris.Add(k -floorCount +1);	//first
@@ -115,7 +110,7 @@ public class ProceduralMesh : MonoBehaviour {
 			tris.Add(i);	
 			tris.Add(i +1);	
 
-			int k = floorCount*(floorNumber-1);
+			int k = floorCount*(floorValues.Count-1);
 			tris.Add(i +k +1);
 			tris.Add(i +k);
 			tris.Add(0 +k);
