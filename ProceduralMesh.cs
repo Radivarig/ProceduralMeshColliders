@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-//[ExecuteInEditMode]
+[ExecuteInEditMode]
 public class ProceduralMesh : MonoBehaviour {
 
 	public enum Types{
@@ -36,7 +36,6 @@ public class ProceduralMesh : MonoBehaviour {
 		InitMesh();
 		//gameObject.AddComponent<MeshRenderer>();
 		mc = gameObject.AddComponent<MeshCollider>();
-		mc.convex = true;
 	}
 
 	void InitMesh(){
@@ -44,10 +43,11 @@ public class ProceduralMesh : MonoBehaviour {
 		if (mf ==null){
 			mf = gameObject.AddComponent<MeshFilter>();
 		}
-		mesh = mf.mesh;
+		mesh = mf.sharedMesh;
 		if(mesh ==null){
 			mesh = new Mesh();
-			mf.mesh = mesh;
+			mesh.name = "procedural mesh";
+			mf.sharedMesh = mesh;
 		}
 	}
 
@@ -55,6 +55,8 @@ public class ProceduralMesh : MonoBehaviour {
 		if (TrueEverySeconds(checkEvery) && InspectorChanged()){
 			while (floorValues.Count < floorNumber)
 				floorValues.Add(new PairFloat());
+			while (floorValues.Count > floorNumber)
+				floorValues.RemoveAt(floorValues.Count-1);
 
 		 	if(type == Types.Ngon) MakeNgon(true);
 		 	else if(type == Types.Prism) MakePrism();
@@ -65,8 +67,7 @@ public class ProceduralMesh : MonoBehaviour {
 			mc.enabled = true;
 		}
 	}
-
-	//public void MakePrism(bool flipNormals = false){
+	
 	public void MakePrism(){
 		List<Vector3> vertices = new List<Vector3>();
 
@@ -138,16 +139,9 @@ public class ProceduralMesh : MonoBehaviour {
 		if(flipNormals) FlipNormals(mesh);
 
 	}
-	void CreateMesh(){
-
-
-	}
 
 	//TODO maybe add flip, not important
 	List<int> MakeTrianglesWithCenter(List<Vector3> baseVerts, float height = 0f){
-		//TODO if height = 0f dont make it in center to minimize mesh
-
-		//baseVerts.Add(new Vector3(0f, height, 0f));	//center
 		int count = baseVerts.Count;
 
 		List<int> tris = new List<int>();
@@ -222,8 +216,8 @@ public class ProceduralMesh : MonoBehaviour {
 
 [System.Serializable]
 public class PairFloat{
-	[Range(0.01f, 3f)]public float radius;
-	[Range(0, 3)] public float height;
+	[Range(0, 3)] public float radius;
+	[Range(0, 4)] public float height;
 
 	public PairFloat(float radius = 1f, float height = 0f){
 		this.radius = radius;
