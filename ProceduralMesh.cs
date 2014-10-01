@@ -27,7 +27,8 @@ public class ProceduralMesh : MonoBehaviour {
 	void Start () {
 		InitMesh();
 		//gameObject.AddComponent<MeshRenderer>();
-		mc = gameObject.AddComponent<MeshCollider>();
+		mc = gameObject.GetComponent<MeshCollider>();
+		if (mc ==null) mc = gameObject.AddComponent<MeshCollider>();
 		mc.sharedMesh = mesh;
 		floorValues.Add(new PairFloat());
 	}
@@ -40,6 +41,11 @@ public class ProceduralMesh : MonoBehaviour {
 	void Update () {
 		if (TrueEverySeconds(checkEvery) && InspectorChanged()){
 			if (floorValues.Count != 0){
+				if (mc ==null){
+					mc = gameObject.AddComponent<MeshCollider>();
+					mc.sharedMesh = mesh;
+				}
+
 			 	if(type == Types.Prism) MakePrism();
 				else mesh.Clear();
 			}
