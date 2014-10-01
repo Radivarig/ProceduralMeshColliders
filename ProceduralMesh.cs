@@ -6,8 +6,7 @@ using System.Collections.Generic;
 public class ProceduralMesh : MonoBehaviour {
 
 	public enum Types{ 
-		Ngon,
-		Piramid,
+		Plane,
 		Prism,
 		Dome,
 	}
@@ -53,8 +52,7 @@ public class ProceduralMesh : MonoBehaviour {
 	void Update () {
 		if (TrueEverySeconds(checkEvery) && InspectorChanged()){
 
-		 	if(type == Types.Ngon) MakeNgon(true);
-		 	else if(type == Types.Prism) MakePrism();
+		 	if(type == Types.Prism) MakePrism();
 			else mesh.Clear();
 
 			//mc.sharedMesh = mesh;
@@ -118,40 +116,7 @@ public class ProceduralMesh : MonoBehaviour {
 
 		return tris;
 	}
-
-	public void MakeNgon(bool flipNormals = false){
-		List<Vector3> baseVerts = BaseVertices(baseNumber, floorValues[0].radius, floorValues[0].position.y);
-
-		baseVerts.Add(new Vector3(0f, floorValues[0].position.y, 0f));	//center
-
-		List<int> tris = MakeTrianglesWithCenter(baseVerts);
-
-		mesh.Clear();
-		
-		mesh.vertices = baseVerts.ToArray();
-		mesh.triangles = tris.ToArray();
-
-		if(flipNormals) FlipNormals(mesh);
-
-	}
-
-	//TODO maybe add flip, not important
-	List<int> MakeTrianglesWithCenter(List<Vector3> baseVerts, float height = 0f){
-		int count = baseVerts.Count;
-
-		List<int> tris = new List<int>();
-		for (int i = 0; i < count -1; i++){
-			tris.Add(count -1);
-			tris.Add(i);
-			tris.Add(i+1);
-		}
-		tris.Add(count -2);
-		tris.Add(0);
-		tris.Add(count -1);
-
-		return tris;
-	}
-
+	
 	List<Vector3> BaseVertices(int baseNumber, float radius = 1f, float heigth = 0f){
 		List<Vector3> verts = new List<Vector3>();
 
