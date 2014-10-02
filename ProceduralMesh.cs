@@ -17,6 +17,11 @@ public class ProceduralMesh : MonoBehaviour {
 
 	//base
 	[Range(3, 32)] public int baseNumber = 3;
+	[Range(1, 64)] public int rows = 1;
+	[Range(1, 64)] public int columns = 1;
+	[Range(0.1f, 3f)] public float unit = 1;
+	[Range(0, 2)] public float piOffset = 0.25f;
+
 
 	public List<PairFloat> floorValues = new List<PairFloat>();
 
@@ -47,6 +52,7 @@ public class ProceduralMesh : MonoBehaviour {
 				}
 
 			 	if(type == Types.Prism) MakePrism();
+				else if (type == Types.Plane) MakePlane();
 				else mesh.Clear();
 			}
 
@@ -54,22 +60,72 @@ public class ProceduralMesh : MonoBehaviour {
 			mc.enabled = true;
 		}
 	}
-	
+
+	public void MakePlane(){
+		List<Vector3> vertices = new List<Vector3>();
+		
+		for(int i = 0; i <= rows; i++){
+			for(int j = 0; j <= columns; j++){
+				vertices.Add(new Vector3(j*unit, 0f, i* unit));
+			}
+		}
+
+		List<int> tris = MakeTrianglesWithNextAndUp(rows, columns);
+		
+		mesh.Clear();
+		mesh.vertices = vertices.ToArray();
+		mesh.triangles = tris.ToArray();
+	}
+
 	public void MakePrism(){
 		List<Vector3> vertices = new List<Vector3>();
 
 		foreach(PairFloat floor in floorValues){
-			vertices.AddRange(BaseVertices(baseNumber, floor.radius, floor.position));
+			List<Vector3> baseVerts = BaseVertices(baseNumber, floor.radius, floor.position);
+			if (floor.rotation != Vector3.zero){
+				for(int i = 0; i < baseVerts.Count; i++){
+					Quaternion rotation = Quaternion.Euler(floor.rotation);
+					Vector3 newRotation = rotation * baseVerts[i];
+
+					float x = baseVerts[i].x;
+					float y = baseVerts[i].y;
+					float z = baseVerts[i].z;
+					if (floor.freezeAxis.x == 0f) x = newRotation.x;
+					if (floor.freezeAxis.y == 0f) y = newRotation.y;
+					if (floor.freezeAxis.z == 0f) z = newRotation.z;
+					
+					baseVerts[i] = new Vector3(x, y, z);
+				}
+			}
+			vertices.AddRange(baseVerts);
 		}
 
-		List<int> tris = MakeTrianglesWithNextAndUp(vertices.Count/floorValues.Count);
+		List<int> tris = MakeTrianglesWithNextAndUpClosed(vertices.Count/floorValues.Count);
 
 		mesh.Clear();
 		mesh.vertices = vertices.ToArray();
 		mesh.triangles = tris.ToArray();
 	}
 
-	public List<int> MakeTrianglesWithNextAndUp(int floorCount){
+	public List<int> MakeTrianglesWithNextAndUp(int rowNo, int colNo){
+		List<int> tris = new List<int>();
+
+		for (int i = 0; i < colNo; i++){
+			for(int j = 0; j < rowNo; j++){
+				int k = j*colNo + i;
+				tris.Add(k + colNo);
+				tris.Add(k + 1);
+				tris.Add(k);
+				
+				tris.Add(k + colNo);
+				tris.Add(k + colNo + 1);
+				tris.Add(k + 1);
+			}
+		}
+		return tris;
+	}
+
+	public List<int> MakeTrianglesWithNextAndUpClosed(int floorCount){
 		List<int> tris = new List<int>();
 		//int floorCount = floorValues[0].vertices.Count;
 		for (int i = 0; i < floorCount -1 ; i++){
@@ -116,8 +172,8 @@ public class ProceduralMesh : MonoBehaviour {
 
 		for(int i = 0; i < baseNumber; i++){
 			float radians = i * 360f/baseNumber * Mathf.Deg2Rad;
-			float x = Mathf.Cos(radians)*radius;
-			float z = Mathf.Sin(radians)*radius;
+			float x = Mathf.Cos(radians +Mathf.PI*piOffset)*radius;
+			float z = Mathf.Sin(radians +Mathf.PI*piOffset)*radius;
 			verts.Add(new Vector3 (x + position.x, position.y, z + position.z));
 		}
 	
@@ -126,7 +182,7 @@ public class ProceduralMesh : MonoBehaviour {
 
 	//variable needed only for TrueEverySeconds
 	private float time = 0f;
-
+	//TODO EditorApplication.timeSinceStartup for edit mode
 	bool TrueEverySeconds(float sec, int decimals = 1){
 		//time init
 		if (time == 0f) time = Time.time;
@@ -164,6 +220,8 @@ public class ProceduralMesh : MonoBehaviour {
 [System.Serializable]
 public class PairFloat{
 	public Vector3 position;
+	public Vector3 rotation;
+	public Vector3 freezeAxis;
 	[Range(0, 3)] public float radius;
 
 	public PairFloat(Vector3 position = default(Vector3), float radius = 1f){
