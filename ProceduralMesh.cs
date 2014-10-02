@@ -21,7 +21,7 @@ public class ProceduralMesh : MonoBehaviour {
 	[Range(1, 64)] public int columns = 1;
 	[Range(0.1f, 3f)] public float unit = 1;
 	[Range(0, 2)] public float piOffset = 0.25f;
-
+	public float cos45 = Mathf.Cos(45f*Mathf.Deg2Rad);
 
 	public List<PairFloat> floorValues = new List<PairFloat>();
 
@@ -84,17 +84,22 @@ public class ProceduralMesh : MonoBehaviour {
 			List<Vector3> baseVerts = BaseVertices(baseNumber, floor.radius, floor.position);
 			if (floor.rotation != Vector3.zero){
 				for(int i = 0; i < baseVerts.Count; i++){
+
+					baseVerts[i] -= floor.GetPivot();
+
 					Quaternion rotation = Quaternion.Euler(floor.rotation);
 					Vector3 newRotation = rotation * baseVerts[i];
 
 					float x = baseVerts[i].x;
 					float y = baseVerts[i].y;
 					float z = baseVerts[i].z;
-					if (floor.freezeAxis.x == 0f) x = newRotation.x;
-					if (floor.freezeAxis.y == 0f) y = newRotation.y;
-					if (floor.freezeAxis.z == 0f) z = newRotation.z;
-					
+					if (floor.freezeAxisX ==false) x = newRotation.x;
+					if (floor.freezeAxisY ==false) y = newRotation.y;
+					if (floor.freezeAxisZ ==false) z = newRotation.z;
+
 					baseVerts[i] = new Vector3(x, y, z);
+
+					baseVerts[i] += floor.GetPivot();
 				}
 			}
 			vertices.AddRange(baseVerts);
@@ -219,13 +224,34 @@ public class ProceduralMesh : MonoBehaviour {
 
 [System.Serializable]
 public class PairFloat{
+	public enum Pivot{
+		Center,
+		Left,
+		Right,
+		Front,
+		Back
+	}public Pivot pivotType = Pivot.Center;
 	public Vector3 position;
-	public Vector3 rotation;
-	public Vector3 freezeAxis;
 	[Range(0, 3)] public float radius;
+	public Vector3 rotation;
+	public bool freezeAxisX;
+	public bool freezeAxisY;
+	public bool freezeAxisZ;
 
 	public PairFloat(Vector3 position = default(Vector3), float radius = 1f){
 		this.position = position;
 		this.radius = radius;
+	}
+
+	public Vector3 GetPivot(){
+		float distanceToEdge = 0.5f*Mathf.Sqrt(2f)*radius;
+	switch(pivotType){
+		case Pivot.Center: return new Vector3(0f, 0f, 0f) + position;
+		case Pivot.Left: return new Vector3(-distanceToEdge, 0f, 0f) + position;
+		case Pivot.Right: return new Vector3(distanceToEdge, 0f, 0f) + position;
+		case Pivot.Front: return new Vector3(0f, 0f, distanceToEdge) + position;
+		case Pivot.Back: return new Vector3(0f, 0f, -distanceToEdge) + position;
+		}
+		return Vector3.zero;
 	}
 }
