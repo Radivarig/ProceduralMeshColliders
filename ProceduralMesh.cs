@@ -21,40 +21,57 @@ public class ProceduralMesh : MonoBehaviour {
 	[Range(1, 64)] public int columns = 1;
 	[Range(0.1f, 3f)] public float unit = 1;
 	[Range(0, 2)] public float piOffset = 0.25f;
-	public float cos45 = Mathf.Cos(45f*Mathf.Deg2Rad);
+
+	public bool renderMesh = true;
 
 	public List<PairFloat> floorValues = new List<PairFloat>();
 
 	//mesh
 	private Mesh mesh;
+	private MeshFilter mf;
+	private MeshRenderer mr;
 	private MeshCollider mc;
-
-	void Start () {
-		InitMesh();
-		//gameObject.AddComponent<MeshRenderer>();
-		mc = gameObject.GetComponent<MeshCollider>();
-		if (mc ==null) mc = gameObject.AddComponent<MeshCollider>();
-		mc.sharedMesh = mesh;
-		if(floorValues.Count == 0) floorValues.Add(new PairFloat());
-	}
-
+	
 	void InitMesh(){
 		mesh = new Mesh();
 		mesh.name = "procedural mesh";
 	}
 
 	void Update () {
-		if (TrueEverySeconds(checkEvery) && InspectorChanged()){
-			if (floorValues.Count != 0){
-				if (mc ==null){
-					mc = gameObject.AddComponent<MeshCollider>();
-					mc.sharedMesh = mesh;
-				}
+		if (TrueEverySeconds(checkEvery) && InspectorChanged())
+		{
+			if(mesh ==null) InitMesh();
+			if(floorValues.Count == 0) floorValues.Add(new PairFloat());
 
-			 	if(type == Types.Prism) MakePrism();
-				else if (type == Types.Plane) MakePlane();
-				else mesh.Clear();
+			//get mesh collider
+			if (mc ==null){
+				mc = gameObject.GetComponent<MeshCollider>();
+				if (mc ==null) mc = gameObject.AddComponent<MeshCollider>();
+				mc.sharedMesh = mesh;
 			}
+			//get mesh filter and mesh renderer
+			if(renderMesh){
+				if(mf ==null){
+					mf = gameObject.GetComponent<MeshFilter>();
+					if (mf ==null) mf = gameObject.AddComponent<MeshFilter>();
+					mf.sharedMesh = mesh;
+				}
+				if(mr ==null){
+					mr = gameObject.GetComponent<MeshRenderer>();
+					if (mr ==null) {
+						mr = gameObject.AddComponent<MeshRenderer>();
+					}
+				}
+			}
+			else if (mf !=null){
+				DestroyImmediate(mr);
+				DestroyImmediate(mf);
+			}
+			
+		 	if(type == Types.Prism) MakePrism();
+			else if (type == Types.Plane) MakePlane();
+			else mesh.Clear();
+
 
 			mc.enabled = false;
 			mc.enabled = true;
