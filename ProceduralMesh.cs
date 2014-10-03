@@ -43,13 +43,7 @@ public class ProceduralMesh : MonoBehaviour {
 
 	void Update () {
 		if(exportToObj) {
-			string path = "/Abiogenesis/Procedural Primitives and Colliders/Exports/";
-			string fullPath = Application.dataPath + path;
-			if(Directory.Exists(fullPath) ==false)
-				Directory.CreateDirectory(fullPath);
-			MeshToFile(mf, Application.dataPath + path + name + ".obj");
-			AssetDatabase.Refresh();
-			exportToObj = false;		
+			HandleExport();
 		}
 
 		if (TrueEverySeconds(checkEvery) && InspectorChanged())
@@ -91,6 +85,17 @@ public class ProceduralMesh : MonoBehaviour {
 			mc.enabled = false;
 			mc.enabled = true;
 		}
+	}
+
+	void HandleExport(){
+		string path = "/Abiogenesis/Procedural Primitives and Colliders/Exports/";
+		string fullPath = Application.dataPath + path;
+		if(Directory.Exists(fullPath) ==false)
+			Directory.CreateDirectory(fullPath);
+		MeshToFile(mf, Application.dataPath + path + name + ".obj");
+		AssetDatabase.Refresh();
+		exportToObj = false;		
+	
 	}
 
 	void InitMesh(){
