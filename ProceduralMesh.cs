@@ -67,11 +67,11 @@ public class ProceduralMesh : MonoBehaviour {
 			else if (type == Types.Plane) MakePlane();
 			else mesh.Clear();
 
-
 			mc.enabled = false;
 			mc.enabled = true;
 		}
 	}
+
 
 	void GetMeshRenderer(){
 		mr = gameObject.GetComponent<MeshRenderer>();
@@ -94,14 +94,20 @@ public class ProceduralMesh : MonoBehaviour {
 	}
 
 	void HandleExport(){
+		if(renderMesh ==false){
+			GetMeshFilter();
+			GetMeshRenderer();
+		}
+
 		string path = "/Abiogenesis/Procedural Primitives and Colliders/Exports/";
 		string fullPath = Application.dataPath + path;
 		if(Directory.Exists(fullPath) ==false)
 			Directory.CreateDirectory(fullPath);
 		MeshToFile(mf, Application.dataPath + path + name + ".obj");
 		AssetDatabase.Refresh();
-		exportToObj = false;		
-	
+		exportToObj = false;	
+
+			
 	}
 
 	void InitMesh(){
