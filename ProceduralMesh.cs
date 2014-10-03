@@ -53,9 +53,7 @@ public class ProceduralMesh : MonoBehaviour {
 
 			//get mesh collider
 			if (mc ==null){
-				mc = gameObject.GetComponent<MeshCollider>();
-				if (mc ==null) mc = gameObject.AddComponent<MeshCollider>();
-				mc.sharedMesh = mesh;
+				GetMeshCollider();
 			}
 			//get mesh filter and mesh renderer
 			if(renderMesh){
@@ -85,6 +83,12 @@ public class ProceduralMesh : MonoBehaviour {
 			mc.enabled = false;
 			mc.enabled = true;
 		}
+	}
+
+	void GetMeshCollider(){
+		mc = gameObject.GetComponent<MeshCollider>();
+		if (mc ==null) mc = gameObject.AddComponent<MeshCollider>();
+		mc.sharedMesh = mesh;
 	}
 
 	void HandleExport(){
