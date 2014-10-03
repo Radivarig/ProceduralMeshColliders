@@ -52,16 +52,15 @@ public class ProceduralMesh : MonoBehaviour {
 			if(floorValues.Count == 0) floorValues.Add(new PairFloat());
 
 			//get mesh collider
-			if (mc ==null){
+			if (mc ==null)
 				GetMeshCollider();
-			}
+
 			//get mesh filter and mesh renderer
-			if(renderMesh){
-				if(mf ==null){
-					mf = gameObject.GetComponent<MeshFilter>();
-					if (mf ==null) mf = gameObject.AddComponent<MeshFilter>();
-					mf.sharedMesh = mesh;
-				}
+			if(renderMesh)
+			{
+				if(mf ==null) 
+					GetMeshFilter();
+
 				if(mr ==null){
 					mr = gameObject.GetComponent<MeshRenderer>();
 					if (mr ==null) {
@@ -83,6 +82,12 @@ public class ProceduralMesh : MonoBehaviour {
 			mc.enabled = false;
 			mc.enabled = true;
 		}
+	}
+
+	void GetMeshFilter(){
+		mf = gameObject.GetComponent<MeshFilter>();
+		if (mf ==null) mf = gameObject.AddComponent<MeshFilter>();
+		mf.sharedMesh = mesh;
 	}
 
 	void GetMeshCollider(){
