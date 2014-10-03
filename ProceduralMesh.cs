@@ -2,8 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 
+//TODO scale radius by piOffset
+//TODO solve UVs
+//TODO export obj
+//TODO global pivot
+//TODO double vert removal
 [ExecuteInEditMode]
 public class ProceduralMesh : MonoBehaviour {
+	public bool renderMesh = true;
+	public bool exportToObj = false;
 
 	public enum Types{ 
 		Plane,
@@ -22,7 +29,6 @@ public class ProceduralMesh : MonoBehaviour {
 	[Range(0.1f, 3f)] public float unit = 1;
 	[Range(0, 2)] public float piOffset = 0.25f;
 
-	public bool renderMesh = true;
 
 	public List<PairFloat> floorValues = new List<PairFloat>();
 
@@ -38,6 +44,11 @@ public class ProceduralMesh : MonoBehaviour {
 	}
 
 	void Update () {
+		if(exportToObj) {
+			ObjExporter.MeshToFile(mf, Application.dataPath +"/" + mesh.name+".obj");
+			exportToObj = false;		
+		}
+
 		if (TrueEverySeconds(checkEvery) && InspectorChanged())
 		{
 			if(mesh ==null) InitMesh();
@@ -60,6 +71,7 @@ public class ProceduralMesh : MonoBehaviour {
 					mr = gameObject.GetComponent<MeshRenderer>();
 					if (mr ==null) {
 						mr = gameObject.AddComponent<MeshRenderer>();
+						mr.sharedMaterial = new Material(Shader.Find("Diffuse"));;
 					}
 				}
 			}
@@ -92,6 +104,7 @@ public class ProceduralMesh : MonoBehaviour {
 		mesh.Clear();
 		mesh.vertices = vertices.ToArray();
 		mesh.triangles = tris.ToArray();
+		mesh.RecalculateNormals();
 	}
 
 	public void MakePrism(){
@@ -124,9 +137,21 @@ public class ProceduralMesh : MonoBehaviour {
 
 		List<int> tris = MakeTrianglesWithNextAndUpClosed(vertices.Count/floorValues.Count);
 
+		ApplyToMesh(vertices, tris);
+		
+	}
+
+	public void ApplyToMesh(List<Vector3> verts, List<int> tris){
 		mesh.Clear();
-		mesh.vertices = vertices.ToArray();
+		mesh.vertices = verts.ToArray();
 		mesh.triangles = tris.ToArray();
+		mesh.RecalculateNormals();
+
+		/*Vector2[] uvs = new Vector2[verts.Count];
+		for (int i = 0; i < uvs.Length; i++){
+			uvs[i] = new Vector2(verts[i].x, verts[i].z);
+		}
+		mesh.uv = uvs;*/
 	}
 
 	public List<int> MakeTrianglesWithNextAndUp(int rowNo, int colNo){
@@ -225,7 +250,7 @@ public class ProceduralMesh : MonoBehaviour {
 	}
 
 	//reversing triangles array might also work
-	/*void FlipNormals(Mesh mesh){
+	void FlipNormals(Mesh mesh){
 		List<int> triangles = new List<int>();
 		triangles.AddRange(mesh.triangles);
 
@@ -236,7 +261,7 @@ public class ProceduralMesh : MonoBehaviour {
 			i += 2;
 		}
 		mesh.triangles = triangles.ToArray();
-	}*/
+	}
 }
 
 [System.Serializable]
