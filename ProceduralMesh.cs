@@ -42,7 +42,7 @@ public class ProceduralMesh : MonoBehaviour {
 
 	void Update () {
 		if(exportToObj) {
-			ObjExporter.MeshToFile(mf, Application.dataPath +"/" + mesh.name+".obj");
+			MeshToFile(mf, Application.dataPath +"/" + mesh.name+".obj");
 			exportToObj = false;		
 		}
 
@@ -264,43 +264,9 @@ public class ProceduralMesh : MonoBehaviour {
 		}
 		mesh.triangles = triangles.ToArray();
 	}
-}
-
-[System.Serializable]
-public class PairFloat{
-	public enum Pivot{
-		Center,
-		Left,
-		Right,
-		Front,
-		Back
-	}public Pivot pivotType = Pivot.Center;
-	public Vector3 position;
-	[Range(0, 3)] public float radius;
-	public Vector3 rotation;
-	public bool freezeAxisX;
-	public bool freezeAxisY;
-	public bool freezeAxisZ;
-
-	public PairFloat(Vector3 position = default(Vector3), float radius = 1f){
-		this.position = position;
-		this.radius = radius;
-	}
-
-	public Vector3 GetPivot(){
-		float distanceToEdge = 0.5f*Mathf.Sqrt(2f)*radius;
-	switch(pivotType){
-		case Pivot.Center: return new Vector3(0f, 0f, 0f) + position;
-		case Pivot.Left: return new Vector3(-distanceToEdge, 0f, 0f) + position;
-		case Pivot.Right: return new Vector3(distanceToEdge, 0f, 0f) + position;
-		case Pivot.Front: return new Vector3(0f, 0f, distanceToEdge) + position;
-		case Pivot.Back: return new Vector3(0f, 0f, -distanceToEdge) + position;
-		}
-		return Vector3.zero;
-	}
 
 	public static string MeshToString(MeshFilter mf) {
-		Mesh m = mf.mesh;
+		Mesh m = mf.sharedMesh;
 		Material[] mats = mf.renderer.sharedMaterials;
 		
 		StringBuilder sb = new StringBuilder();
@@ -336,5 +302,39 @@ public class PairFloat{
 		{
 			sw.Write(MeshToString(mf));
 		}
+	}
+}
+
+[System.Serializable]
+public class PairFloat{
+	public enum Pivot{
+		Center,
+		Left,
+		Right,
+		Front,
+		Back
+	}public Pivot pivotType = Pivot.Center;
+	public Vector3 position;
+	[Range(0, 3)] public float radius;
+	public Vector3 rotation;
+	public bool freezeAxisX;
+	public bool freezeAxisY;
+	public bool freezeAxisZ;
+
+	public PairFloat(Vector3 position = default(Vector3), float radius = 1f){
+		this.position = position;
+		this.radius = radius;
+	}
+
+	public Vector3 GetPivot(){
+		float distanceToEdge = 0.5f*Mathf.Sqrt(2f)*radius;
+	switch(pivotType){
+		case Pivot.Center: return new Vector3(0f, 0f, 0f) + position;
+		case Pivot.Left: return new Vector3(-distanceToEdge, 0f, 0f) + position;
+		case Pivot.Right: return new Vector3(distanceToEdge, 0f, 0f) + position;
+		case Pivot.Front: return new Vector3(0f, 0f, distanceToEdge) + position;
+		case Pivot.Back: return new Vector3(0f, 0f, -distanceToEdge) + position;
+		}
+		return Vector3.zero;
 	}
 }
