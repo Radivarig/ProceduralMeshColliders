@@ -42,7 +42,11 @@ public class ProceduralMesh : MonoBehaviour {
 
 	void Update () {
 		if(exportToObj) {
-			MeshToFile(mf, Application.dataPath +"/" + mesh.name+".obj");
+			string path = "/Abiogenesis/Procedural Primitives and Colliders/Exports/";
+			string fullPath = Application.dataPath + path;
+			if(Directory.Exists(fullPath) ==false)
+				Directory.CreateDirectory(fullPath);
+			MeshToFile(mf, Application.dataPath + path + name + ".obj");
 			exportToObj = false;		
 		}
 
@@ -149,11 +153,11 @@ public class ProceduralMesh : MonoBehaviour {
 		mesh.triangles = tris.ToArray();
 		mesh.RecalculateNormals();
 
-		/*Vector2[] uvs = new Vector2[verts.Count];
+		Vector2[] uvs = new Vector2[verts.Count];
 		for (int i = 0; i < uvs.Length; i++){
 			uvs[i] = new Vector2(verts[i].x, verts[i].z);
 		}
-		mesh.uv = uvs;*/
+		mesh.uv = uvs;
 	}
 
 	public List<int> MakeTrianglesWithNextAndUp(int rowNo, int colNo){
@@ -267,8 +271,7 @@ public class ProceduralMesh : MonoBehaviour {
 
 	public static string MeshToString(MeshFilter mf) {
 		Mesh m = mf.sharedMesh;
-		Material[] mats = mf.renderer.sharedMaterials;
-		
+
 		StringBuilder sb = new StringBuilder();
 		
 		sb.Append("g ").Append(mf.name).Append("\n");
@@ -283,23 +286,18 @@ public class ProceduralMesh : MonoBehaviour {
 		foreach(Vector3 v in m.uv) {
 			sb.Append(string.Format("vt {0} {1}\n",v.x,v.y));
 		}
-		for (int material=0; material < m.subMeshCount; material ++) {
-			sb.Append("\n");
-			sb.Append("usemtl ").Append(mats[material].name).Append("\n");
-			sb.Append("usemap ").Append(mats[material].name).Append("\n");
-			
-			int[] triangles = m.GetTriangles(material);
-			for (int i=0;i<triangles.Length;i+=3) {
-				sb.Append(string.Format("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}\n", 
-				                        triangles[i]+1, triangles[i+1]+1, triangles[i+2]+1));
-			}
+
+		int[] triangles = m.GetTriangles(0);
+		for (int i=0;i<triangles.Length;i+=3) {
+			sb.Append(string.Format("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}\n", 
+			                        triangles[i]+1, triangles[i+1]+1, triangles[i+2]+1));
+
 		}
 		return sb.ToString();
 	}
 	
 	public static void MeshToFile(MeshFilter mf, string filename) {
-		using (StreamWriter sw = new StreamWriter(filename)) 
-		{
+		using (StreamWriter sw = new StreamWriter(filename)) {
 			sw.Write(MeshToString(mf));
 		}
 	}
