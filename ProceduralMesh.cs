@@ -225,14 +225,15 @@ public class ProceduralMesh : MonoBehaviour {
 
 		//close top and bottom 
 		for (int i = 0; i < floorCount -1; i++){
-			tris.Add(0);
-			tris.Add(i);	
-			tris.Add(i +1);	
-
 			int k = floorCount*(floorValues.Count-1);
 			tris.Add(i +k +1);
 			tris.Add(i +k);
 			tris.Add(0 +k);
+
+			if(floorValues.Count == 1) continue;
+			tris.Add(0);
+			tris.Add(i);	
+			tris.Add(i +1);	
 		}
 
 		return tris;
