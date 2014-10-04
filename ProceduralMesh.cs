@@ -123,19 +123,14 @@ public class ProceduralMesh : MonoBehaviour {
 
 	public void MakePrism(){
 		List<Vector3> vertices = new List<Vector3>();
-
 		//duplicate sharp floors 
-		int c = 0;
-		List<PairFloat> duplicates = new List<PairFloat>();
-		foreach(PairFloat floor in floorValues.ToArray()){
-			if(floor.sharpEdge) {
-				duplicates.Add(floor);
-				floorValues.Insert(++c, floor.CopyThis());
-				c++;
-			}
+		List<PairFloat> withDuplicates = new List<PairFloat>();
+		foreach(PairFloat floor in floorValues){
+			if(floor.sharpEdge) withDuplicates.Add(floor.CopyThis());
+			withDuplicates.Add(floor);
 		}
 
-		foreach(PairFloat floor in floorValues){
+		foreach(PairFloat floor in withDuplicates){
 			List<Vector3> baseVerts = BaseVertices(baseNumber, floor.radius, floor.position);
 			if (floor.rotation != Vector3.zero){
 				for(int i = 0; i < baseVerts.Count; i++){
@@ -160,13 +155,9 @@ public class ProceduralMesh : MonoBehaviour {
 			vertices.AddRange(baseVerts);
 		}
 
-		List<int> tris = MakeTrianglesWithNextAndUpClosed(vertices.Count/floorValues.Count);
+		List<int> tris = MakeTrianglesWithNextAndUpClosed(vertices.Count/withDuplicates.Count, withDuplicates);
 
 		ApplyToMesh(vertices, tris);
-
-		//remove duplicated floors
-		foreach(PairFloat dup in duplicates)
-			floorValues.Remove(dup);
 	}
 
 	public void ApplyToMesh(List<Vector3> verts, List<int> tris){
@@ -205,7 +196,7 @@ public class ProceduralMesh : MonoBehaviour {
 		return tris;
 	}
 
-	public List<int> MakeTrianglesWithNextAndUpClosed(int floorCount){
+	public List<int> MakeTrianglesWithNextAndUpClosed(int floorCount, List<PairFloat> floorValues){
 		List<int> tris = new List<int>();
 		for (int i = 0; i < floorCount -1; i++){
 			for(int j = 0; j < floorValues.Count-1; j++){
@@ -341,7 +332,7 @@ public class PairFloat{
 	public bool freezeAxisY;
 	public bool freezeAxisZ;
 
-	public PairFloat(Pivot pivotType = Pivot.Center, bool sharpEdge = false, float radius = 1f,
+	public PairFloat(Pivot pivotType = Pivot.Center, bool sharpEdge = true, float radius = 1f,
 	                 Vector3 position = default(Vector3), Vector3 rotation = default(Vector3),
 	                 bool freezeX = false, bool freezeY = false, bool freezeZ = false){
 		this.pivotType = pivotType;
