@@ -8,6 +8,7 @@ using System.Text;
 //TODO scale radius by piOffset
 //TODO global pivot
 //TODO proper uv unwrap
+//TODO remove doubles for non-rendered collider-only mesh when floor radius is 0
 [ExecuteInEditMode]
 public class ProceduralMesh : MonoBehaviour {
 	public bool renderMesh = true;
@@ -25,6 +26,7 @@ public class ProceduralMesh : MonoBehaviour {
 	[Range(1, 64)] public int rows = 1;
 	[Range(1, 64)] public int columns = 1;
 	[Range(0, 2)] public float piOffset = 0.25f;
+	//public bool useSharpEdgedEnds = true;
 
 	public List<PairFloat> floorValues = new List<PairFloat>();
 
@@ -122,6 +124,17 @@ public class ProceduralMesh : MonoBehaviour {
 	public void MakePrism(){
 		List<Vector3> vertices = new List<Vector3>();
 
+		//duplicate sharp floors 
+		int c = 0;
+		List<PairFloat> duplicates = new List<PairFloat>();
+		foreach(PairFloat floor in floorValues.ToArray()){
+			if(floor.sharpEdge) {
+				duplicates.Add(floor);
+				floorValues.Insert(++c, floor.CopyThis());
+				c++;
+			}
+		}
+
 		foreach(PairFloat floor in floorValues){
 			List<Vector3> baseVerts = BaseVertices(baseNumber, floor.radius, floor.position);
 			if (floor.rotation != Vector3.zero){
@@ -150,6 +163,10 @@ public class ProceduralMesh : MonoBehaviour {
 		List<int> tris = MakeTrianglesWithNextAndUpClosed(vertices.Count/floorValues.Count);
 
 		ApplyToMesh(vertices, tris);
+
+		//remove duplicated floors
+		foreach(PairFloat dup in duplicates)
+			floorValues.Remove(dup);
 	}
 
 	public void ApplyToMesh(List<Vector3> verts, List<int> tris){
@@ -265,7 +282,7 @@ public class ProceduralMesh : MonoBehaviour {
 	}
 
 	//reversing triangles array might also work
-	void FlipNormals(Mesh mesh){
+	/* FlipNormals(Mesh mesh){
 		List<int> triangles = new List<int>();
 		triangles.AddRange(mesh.triangles);
 
@@ -276,7 +293,7 @@ public class ProceduralMesh : MonoBehaviour {
 			i += 2;
 		}
 		mesh.triangles = triangles.ToArray();
-	}
+	}*/
 
 	public static string MeshToString(MeshFilter mf) {
 		Mesh m = mf.sharedMesh;
@@ -314,13 +331,9 @@ public class ProceduralMesh : MonoBehaviour {
 
 [System.Serializable]
 public class PairFloat{
-	public enum Pivot{
-		Center,
-		Left,
-		Right,
-		Front,
-		Back
-	}public Pivot pivotType = Pivot.Center;
+	public enum Pivot{Center, Left, Right, Front, Back,}
+	public Pivot pivotType;
+	public bool sharpEdge;
 	public Vector3 position;
 	[Range(0, 3)] public float radius;
 	public Vector3 rotation;
@@ -328,9 +341,27 @@ public class PairFloat{
 	public bool freezeAxisY;
 	public bool freezeAxisZ;
 
-	public PairFloat(Vector3 position = default(Vector3), float radius = 1f){
-		this.position = position;
+	public PairFloat(Pivot pivotType = Pivot.Center, bool sharpEdge = false, float radius = 1f,
+	                 Vector3 position = default(Vector3), Vector3 rotation = default(Vector3),
+	                 bool freezeX = false, bool freezeY = false, bool freezeZ = false){
+		this.pivotType = pivotType;
+		this.sharpEdge= sharpEdge;
 		this.radius = radius;
+		this.position = position;
+		this.rotation = rotation;
+		this.freezeAxisX = freezeX;
+		this.freezeAxisY = freezeY;
+		this.freezeAxisZ = freezeZ;
+	}
+
+	public PairFloat CopyFrom(PairFloat target){
+		return new PairFloat(target.pivotType, target.sharpEdge, target.radius,
+		                     target.position, target.rotation, 
+		                     target.freezeAxisX, target.freezeAxisY, target.freezeAxisZ);
+	}
+
+	public PairFloat CopyThis(){
+		return CopyFrom(this);
 	}
 
 	public Vector3 GetPivot(){
