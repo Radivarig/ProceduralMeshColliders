@@ -180,16 +180,17 @@ public class ProceduralMesh : MonoBehaviour {
 	public List<int> MakeTrianglesWithNextAndUp(int rowNo, int colNo){
 		List<int> tris = new List<int>();
 
-		for (int i = 0; i < colNo; i++){
-			for(int j = 0; j < rowNo; j++){
-				int k = j*colNo + i;
-				tris.Add(k + colNo);
+		for (int i = 0; i < rowNo; i++){
+			for(int j = 0; j < colNo; j++){
+
+				int k =i*(colNo+1) + j;
+				tris.Add(k + colNo + 1);
 				tris.Add(k + 1);
 				tris.Add(k);
 				
-				tris.Add(k + colNo);
-				tris.Add(k + colNo + 1);
 				tris.Add(k + 1);
+				tris.Add(k + colNo + 1);
+				tris.Add(k + colNo + 2);
 			}
 		}
 		return tris;
