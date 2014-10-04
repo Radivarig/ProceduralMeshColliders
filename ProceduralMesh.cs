@@ -93,7 +93,7 @@ public class ProceduralMesh : MonoBehaviour {
 			GetMeshRenderer();
 		}
 
-		string path = "/Abiogenesis/Procedural Primitives and Colliders/Exports/";
+		string path = "/Abiogenesis/Procedural Mesh Colliders/Exports/";
 		string fullPath = Application.dataPath + path;
 		if(Directory.Exists(fullPath) ==false)
 			Directory.CreateDirectory(fullPath);
