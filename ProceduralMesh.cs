@@ -6,20 +6,18 @@ using System.IO;
 using System.Text;
 
 //TODO scale radius by piOffset
-//TODO solve UVs
-//TODO export obj
 //TODO global pivot
 //TODO double vert removal
 [ExecuteInEditMode]
 public class ProceduralMesh : MonoBehaviour {
 	public bool renderMesh = true;
 	public bool exportToObj = false;
-
 	public enum Types{ 
 		Plane,
 		Prism,
 		Dome,
 	}
+	
 	//public Types ;
 	public Types type = Types.Prism;
 
@@ -29,7 +27,6 @@ public class ProceduralMesh : MonoBehaviour {
 	[Range(3, 32)] public int baseNumber = 3;
 	[Range(1, 64)] public int rows = 1;
 	[Range(1, 64)] public int columns = 1;
-	[Range(0.1f, 3f)] public float unit = 1;
 	[Range(0, 2)] public float piOffset = 0.25f;
 
 
@@ -117,19 +114,16 @@ public class ProceduralMesh : MonoBehaviour {
 
 	public void MakePlane(){
 		List<Vector3> vertices = new List<Vector3>();
-		
+		float radius = floorValues[0].radius;
 		for(int i = 0; i <= rows; i++){
 			for(int j = 0; j <= columns; j++){
-				vertices.Add(new Vector3(j*unit, 0f, i* unit));
+				vertices.Add(new Vector3(j*radius/columns, 0f, i*radius/rows));
 			}
 		}
 
 		List<int> tris = MakeTrianglesWithNextAndUp(rows, columns);
-		
-		mesh.Clear();
-		mesh.vertices = vertices.ToArray();
-		mesh.triangles = tris.ToArray();
-		mesh.RecalculateNormals();
+
+		ApplyToMesh(vertices, tris);
 	}
 
 	public void MakePrism(){
@@ -171,12 +165,16 @@ public class ProceduralMesh : MonoBehaviour {
 		mesh.vertices = verts.ToArray();
 		mesh.triangles = tris.ToArray();
 		mesh.RecalculateNormals();
+		
+		mesh.RecalculateBounds();
 
 		Vector2[] uvs = new Vector2[verts.Count];
 		for (int i = 0; i < uvs.Length; i++){
 			uvs[i] = new Vector2(verts[i].x, verts[i].z);
 		}
 		mesh.uv = uvs;
+
+		mesh.Optimize();
 	}
 
 	public List<int> MakeTrianglesWithNextAndUp(int rowNo, int colNo){
@@ -244,14 +242,15 @@ public class ProceduralMesh : MonoBehaviour {
 
 		for(int i = 0; i < baseNumber; i++){
 			float radians = i * 360f/baseNumber * Mathf.Deg2Rad;
-			float x = Mathf.Cos(radians +Mathf.PI*piOffset)*radius;
-			float z = Mathf.Sin(radians +Mathf.PI*piOffset)*radius;
+			float offset = Mathf.PI*piOffset;
+			float x = Mathf.Cos(radians + offset)*radius;
+			float z = Mathf.Sin(radians + offset)*radius;
 			verts.Add(new Vector3 (x + position.x, position.y, z + position.z));
 		}
 	
 		return verts;
 	}
-
+	
 	//variable needed only for TrueEverySeconds
 	private float time = 0f;
 	//TODO EditorApplication.timeSinceStartup for edit mode
