@@ -7,7 +7,7 @@ using System.Text;
 
 //TODO scale radius by piOffset
 //TODO global pivot
-//TODO double vert removal
+//TODO proper uv unwrap
 [ExecuteInEditMode]
 public class ProceduralMesh : MonoBehaviour {
 	public bool renderMesh = true;
@@ -16,10 +16,7 @@ public class ProceduralMesh : MonoBehaviour {
 		Plane,
 		Prism,
 		Dome,
-	}
-	
-	//public Types ;
-	public Types type = Types.Prism;
+	}public Types type = Types.Prism;
 
 	private float checkEvery = 0.2f;
 
@@ -28,7 +25,6 @@ public class ProceduralMesh : MonoBehaviour {
 	[Range(1, 64)] public int rows = 1;
 	[Range(1, 64)] public int columns = 1;
 	[Range(0, 2)] public float piOffset = 0.25f;
-
 
 	public List<PairFloat> floorValues = new List<PairFloat>();
 
@@ -68,8 +64,7 @@ public class ProceduralMesh : MonoBehaviour {
 			mc.enabled = true;
 		}
 	}
-
-
+	
 	void GetMeshRenderer(){
 		mr = gameObject.GetComponent<MeshRenderer>();
 		if (mr ==null) {
@@ -103,8 +98,6 @@ public class ProceduralMesh : MonoBehaviour {
 		MeshToFile(mf, Application.dataPath + path + name + ".obj");
 		AssetDatabase.Refresh();
 		exportToObj = false;	
-
-			
 	}
 
 	void InitMesh(){
@@ -157,7 +150,6 @@ public class ProceduralMesh : MonoBehaviour {
 		List<int> tris = MakeTrianglesWithNextAndUpClosed(vertices.Count/floorValues.Count);
 
 		ApplyToMesh(vertices, tris);
-		
 	}
 
 	public void ApplyToMesh(List<Vector3> verts, List<int> tris){
@@ -198,8 +190,7 @@ public class ProceduralMesh : MonoBehaviour {
 
 	public List<int> MakeTrianglesWithNextAndUpClosed(int floorCount){
 		List<int> tris = new List<int>();
-		//int floorCount = floorValues[0].vertices.Count;
-		for (int i = 0; i < floorCount -1 ; i++){
+		for (int i = 0; i < floorCount -1; i++){
 			for(int j = 0; j < floorValues.Count-1; j++){
 				int k = j*floorCount + i;
 				tris.Add(k + floorCount);
@@ -235,7 +226,6 @@ public class ProceduralMesh : MonoBehaviour {
 			tris.Add(i);	
 			tris.Add(i +1);	
 		}
-
 		return tris;
 	}
 	
@@ -249,7 +239,6 @@ public class ProceduralMesh : MonoBehaviour {
 			float z = Mathf.Sin(radians + offset)*radius;
 			verts.Add(new Vector3 (x + position.x, position.y, z + position.z));
 		}
-	
 		return verts;
 	}
 	
