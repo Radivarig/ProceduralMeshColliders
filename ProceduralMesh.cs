@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-//TODO scale radius by piOffset
 //TODO global pivot
 //TODO proper uv unwrap
 //TODO remove doubles for non-rendered collider-only mesh when floor radius is 0
 //TODO sharpFaces in floor
-//TODO radius to private and use sideLength
+//TODO fix pivots for non quads
+//TODO follow curve division floors
+
 [ExecuteInEditMode]
 public class ProceduralMesh : MonoBehaviour {
 	public float a = 0f;
@@ -31,6 +32,7 @@ public class ProceduralMesh : MonoBehaviour {
 	[Range(0, 2)] public float piOffset = 0.25f;
 	public bool minOffsetSnap = false;
 	public bool useIncircle = true;
+	public bool hideEnds = false;
 
 	public List<PairFloat> floorValues = new List<PairFloat>();
 
@@ -248,16 +250,18 @@ public class ProceduralMesh : MonoBehaviour {
 		}
 
 		//close top and bottom 
-		for (int i = 0; i < floorCount -1; i++){
-			int k = floorCount*(floorValues.Count-1);
-			tris.Add(i +k +1);
-			tris.Add(i +k);
-			tris.Add(0 +k);
-
-			if(floorValues.Count == 1) continue;
-			tris.Add(0);
-			tris.Add(i);	
-			tris.Add(i +1);	
+		if(hideEnds ==false){
+			for (int i = 0; i < floorCount -1; i++){
+				int k = floorCount*(floorValues.Count-1);
+				tris.Add(i +k +1);
+				tris.Add(i +k);
+				tris.Add(0 +k);
+				
+				if(floorValues.Count == 1) continue;
+				tris.Add(0);
+				tris.Add(i);	
+				tris.Add(i +1);	
+			}
 		}
 		return tris;
 	}
