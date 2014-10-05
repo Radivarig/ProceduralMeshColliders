@@ -9,6 +9,8 @@ using System.Text;
 //TODO global pivot
 //TODO proper uv unwrap
 //TODO remove doubles for non-rendered collider-only mesh when floor radius is 0
+//TODO sharpFaces in floor
+//TODO radius to private and use sideLength
 [ExecuteInEditMode]
 public class ProceduralMesh : MonoBehaviour {
 	public bool renderMesh = true;
@@ -126,8 +128,13 @@ public class ProceduralMesh : MonoBehaviour {
 		//duplicate sharp floors 
 		List<PairFloat> withDuplicates = new List<PairFloat>();
 		foreach(PairFloat floor in floorValues){
-			if(floor.sharpEdge) withDuplicates.Add(floor.CopyThis());
 			withDuplicates.Add(floor);
+			if(floor.sharpEdge) {
+				PairFloat cpy = floor.CopyThis();
+				//disable so we can track only original floor with sharpEdge ==true and skip it
+				cpy.sharpEdge = false;
+				withDuplicates.Add(cpy);
+			}
 		}
 
 		foreach(PairFloat floor in withDuplicates){
@@ -155,7 +162,7 @@ public class ProceduralMesh : MonoBehaviour {
 			vertices.AddRange(baseVerts);
 		}
 
-		List<int> tris = MakeTrianglesWithNextAndUpClosed(vertices.Count/withDuplicates.Count, withDuplicates);
+		List<int> tris = MakeTrianglesWithNextAndUpClosed(vertices, withDuplicates);
 
 		ApplyToMesh(vertices, tris);
 	}
@@ -196,10 +203,14 @@ public class ProceduralMesh : MonoBehaviour {
 		return tris;
 	}
 
-	public List<int> MakeTrianglesWithNextAndUpClosed(int floorCount, List<PairFloat> floorValues){
+	public List<int> MakeTrianglesWithNextAndUpClosed(List<Vector3> vertices, List<PairFloat> floorValues){
+		int floorCount = vertices.Count/floorValues.Count;
+
 		List<int> tris = new List<int>();
 		for (int i = 0; i < floorCount -1; i++){
 			for(int j = 0; j < floorValues.Count-1; j++){
+				if(floorValues[j].sharpEdge) continue;
+
 				int k = j*floorCount + i;
 				tris.Add(k + floorCount);
 				tris.Add(k + 1);
@@ -212,6 +223,8 @@ public class ProceduralMesh : MonoBehaviour {
 		}
 		//connect last with first
 		for(int j = 0; j < floorValues.Count-1; j++){
+			if(floorValues[j].sharpEdge) continue;
+
 			int k = j*floorCount + floorCount -1;
 			tris.Add(k + floorCount);	//last up
 			tris.Add(k -floorCount +1);	//first
@@ -323,7 +336,7 @@ public class ProceduralMesh : MonoBehaviour {
 [System.Serializable]
 public class PairFloat{
 	public enum Pivot{Center, Left, Right, Front, Back,}
-	public Pivot pivotType;
+	public Pivot pivot;
 	public bool sharpEdge;
 	public Vector3 position;
 	[Range(0, 3)] public float radius;
@@ -335,7 +348,7 @@ public class PairFloat{
 	public PairFloat(Pivot pivotType = Pivot.Center, bool sharpEdge = true, float radius = 1f,
 	                 Vector3 position = default(Vector3), Vector3 rotation = default(Vector3),
 	                 bool freezeX = false, bool freezeY = false, bool freezeZ = false){
-		this.pivotType = pivotType;
+		this.pivot = pivotType;
 		this.sharpEdge= sharpEdge;
 		this.radius = radius;
 		this.position = position;
@@ -346,7 +359,7 @@ public class PairFloat{
 	}
 
 	public PairFloat CopyFrom(PairFloat target){
-		return new PairFloat(target.pivotType, target.sharpEdge, target.radius,
+		return new PairFloat(target.pivot, target.sharpEdge, target.radius,
 		                     target.position, target.rotation, 
 		                     target.freezeAxisX, target.freezeAxisY, target.freezeAxisZ);
 	}
@@ -357,7 +370,7 @@ public class PairFloat{
 
 	public Vector3 GetPivot(){
 		float distanceToEdge = 0.5f*Mathf.Sqrt(2f)*radius;
-	switch(pivotType){
+	switch(pivot){
 		case Pivot.Center: return new Vector3(0f, 0f, 0f) + position;
 		case Pivot.Left: return new Vector3(-distanceToEdge, 0f, 0f) + position;
 		case Pivot.Right: return new Vector3(distanceToEdge, 0f, 0f) + position;
