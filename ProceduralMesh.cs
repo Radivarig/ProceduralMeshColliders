@@ -13,6 +13,7 @@ using System.Text;
 //TODO radius to private and use sideLength
 [ExecuteInEditMode]
 public class ProceduralMesh : MonoBehaviour {
+	public float a = 0f;
 	public bool renderMesh = true;
 	public bool exportToObj = false;
 	public enum Types{ 
@@ -28,7 +29,8 @@ public class ProceduralMesh : MonoBehaviour {
 	[Range(1, 64)] public int rows = 1;
 	[Range(1, 64)] public int columns = 1;
 	[Range(0, 2)] public float piOffset = 0.25f;
-	//public bool useSharpEdgedEnds = true;
+	public bool minOffsetSnap = false;
+	public bool useIncircle = true;
 
 	public List<PairFloat> floorValues = new List<PairFloat>();
 
@@ -39,6 +41,11 @@ public class ProceduralMesh : MonoBehaviour {
 	private MeshCollider mc;
 
 	void Update () {
+		if(minOffsetSnap){
+			piOffset = 1f/baseNumber;
+			minOffsetSnap = false;
+		} 
+
 		if(exportToObj) {
 			HandleExport();
 		}
@@ -138,11 +145,16 @@ public class ProceduralMesh : MonoBehaviour {
 		}
 
 		foreach(PairFloat floor in withDuplicates){
-			List<Vector3> baseVerts = BaseVertices(baseNumber, floor.radius, floor.position);
+			float radius = floor.radius;
+			if(useIncircle){
+				a = 180f/baseNumber;
+				radius = radius *Mathf.Sin(Mathf.PI/baseNumber)/ (Mathf.Tan(a * Mathf.Deg2Rad));
+			}
+			List<Vector3> baseVerts = BaseVertices(baseNumber, radius, floor.position);
 			if (floor.rotation != Vector3.zero){
 				for(int i = 0; i < baseVerts.Count; i++){
 
-					baseVerts[i] -= floor.GetPivot();
+					baseVerts[i] -= floor.GetPivot(baseNumber);
 
 					Quaternion rotation = Quaternion.Euler(floor.rotation);
 					Vector3 newRotation = rotation * baseVerts[i];
@@ -156,7 +168,7 @@ public class ProceduralMesh : MonoBehaviour {
 
 					baseVerts[i] = new Vector3(x, y, z);
 
-					baseVerts[i] += floor.GetPivot();
+					baseVerts[i] += floor.GetPivot(baseNumber);
 				}
 			}
 			vertices.AddRange(baseVerts);
@@ -368,8 +380,9 @@ public class PairFloat{
 		return CopyFrom(this);
 	}
 
-	public Vector3 GetPivot(){
-		float distanceToEdge = 0.5f*Mathf.Sqrt(2f)*radius;
+	public Vector3 GetPivot(int baseNumber){
+		float side = radius * Mathf.Sin((90f-180f/baseNumber)*Mathf.Deg2Rad);
+		float distanceToEdge = side/Mathf.Tan(180/baseNumber*Mathf.Deg2Rad);
 	switch(pivot){
 		case Pivot.Center: return new Vector3(0f, 0f, 0f) + position;
 		case Pivot.Left: return new Vector3(-distanceToEdge, 0f, 0f) + position;
