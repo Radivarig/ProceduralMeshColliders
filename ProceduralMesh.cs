@@ -30,6 +30,7 @@ public class ProceduralMesh : MonoBehaviour {
 	public bool minOffsetSnap = false;
 	public bool useIncircle = true;
 	public bool hideEnds = false;
+	public bool mirrorDome = true;
 
 	public List<PairFloat> floorValues = new List<PairFloat>();
 
@@ -121,24 +122,51 @@ public class ProceduralMesh : MonoBehaviour {
 		if (floor.divisions < 2) floor.divisions = 2;
 		int rows = floor.divisions;
 		int columns = baseNumber;
-		List<Vector3> vertices = new List<Vector3>();
+		List<Vector3> verts = new List<Vector3>();
 		float radius = floor.radius;
 
-		for(int i = 0; i < rows; i++){
-			for(int j = 0; j < columns; j++){
-				float radians = j * 360f/columns * Mathf.Deg2Rad;
-				float offset = Mathf.PI*piOffset;
-
-				float x = Mathf.Cos(radians + offset)*radius* Mathf.Sin(Mathf.PI/2f*(1-i/(rows-1f)));
-				float z = Mathf.Sin(radians + offset)*radius* Mathf.Sin(Mathf.PI/2f*(1-i/(rows-1f)));
-
-				float y = floor.position.y *Mathf.Sin(Mathf.PI/2f*i/(rows-1f));
-				Vector3 vert = new Vector3(x, y, z);
-				Debug.DrawRay(vert, Vector3.forward*0.01f, Color.green);
-				//verts.Add(vert);
+		if (mirrorDome){
+			//rows -1 we skip the last since it is the first for upper part of dome
+			for(int i = 0; i < rows-1; i++){
+				for(int j = 0; j < columns; j++){
+					int ii = rows -1 -i;
+					
+					float radians = j * 360f/columns * Mathf.Deg2Rad;
+					float offset = Mathf.PI*piOffset;
+					
+					float currentRadius = radius* Mathf.Cos(Mathf.PI/2f*(ii/(rows-1f)));
+					float x = Mathf.Cos(radians + offset) *currentRadius;
+					float z = Mathf.Sin(radians + offset) *currentRadius;
+					
+					float y = -floor.position.y *Mathf.Sin(Mathf.PI/2f*ii/(rows-1f));
+					Vector3 vert = new Vector3(x, y, z);
+					//Color col = new Color(ii/(rows-1f), 0f, j/(columns-1f));
+					//Debug.DrawRay(vert, Vector3.forward*0.01f, col);
+					verts.Add(vert);
+				}
 			}
 		}
-		ApplyToMesh(vertices, new List<int>());
+		for(int i = 0; i < rows; i++){
+			for(int j = 0; j < columns; j++){
+				int ii = i;
+				float radians = j * 360f/columns * Mathf.Deg2Rad;
+				float offset = Mathf.PI*piOffset;
+				
+				float currentRadius = radius* Mathf.Cos(Mathf.PI/2f*(ii/(rows-1f)));
+				float x = Mathf.Cos(radians + offset) *currentRadius;
+				float z = Mathf.Sin(radians + offset) *currentRadius;
+				
+				float y = floor.position.y *Mathf.Sin(Mathf.PI/2f*ii/(rows-1f));
+				Vector3 vert = new Vector3(x, y, z);
+				//Color col = new Color(ii/(rows-1f), 0f, j/(columns-1f));
+				//Debug.DrawRay(vert, Vector3.forward*0.01f, col);
+				verts.Add(vert);
+			}
+		}
+		if (mirrorDome) rows = 2*rows -1;
+		//rows -1 since last will get connected to first
+		List<int> tris = MakeTrianglesWithNextAndUp(rows-1, columns-1, true);
+		ApplyToMesh(verts, tris);
 	}
 
 	public void MakePlane(){
@@ -233,7 +261,7 @@ public class ProceduralMesh : MonoBehaviour {
 		mesh.Optimize();
 	}
 
-	public List<int> MakeTrianglesWithNextAndUp(int rowNo, int colNo){
+	public List<int> MakeTrianglesWithNextAndUp(int rowNo, int colNo, bool connectLastToFirst = false){
 		List<int> tris = new List<int>();
 
 		for (int i = 0; i < rowNo; i++){
@@ -247,6 +275,20 @@ public class ProceduralMesh : MonoBehaviour {
 				tris.Add(k + 1);
 				tris.Add(k + colNo + 1);
 				tris.Add(k + colNo + 2);
+			}
+		}
+		//connect last with first
+		if(connectLastToFirst){
+			for(int j = 0; j < rowNo; j++){
+				int floorCount = colNo +1;
+				int k = j*floorCount + floorCount -1;
+				tris.Add(k + floorCount);	//last up
+				tris.Add(k -floorCount +1);	//first
+				tris.Add(k);	//last
+				
+				tris.Add(k + 1);	//first up //k -floorCount +1 - floorCount
+				tris.Add(k - floorCount +1);
+				tris.Add(k + floorCount);
 			}
 		}
 		return tris;
