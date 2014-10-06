@@ -10,11 +10,10 @@ using System.Text;
 //TODO remove doubles for non-rendered collider-only mesh when floor radius is 0
 //TODO sharpFaces in floor
 //TODO fix pivots for non quads
-//TODO follow curve division floors
+//TODO follow type curve/linear division floors
 
 [ExecuteInEditMode]
 public class ProceduralMesh : MonoBehaviour {
-	public float a = 0f;
 	public bool renderMesh = true;
 	public bool exportToObj = false;
 	public enum Types{ 
@@ -26,9 +25,7 @@ public class ProceduralMesh : MonoBehaviour {
 	private float checkEvery = 0.2f;
 
 	//base
-	[Range(3, 32)] public int baseNumber = 3;
-	[Range(1, 64)] public int rows = 1;
-	[Range(1, 64)] public int columns = 1;
+	[Range(1, 64)] public int baseNumber = 3;
 	[Range(0, 2)] public float piOffset = 0.25f;
 	public bool minOffsetSnap = false;
 	public bool useIncircle = true;
@@ -71,6 +68,7 @@ public class ProceduralMesh : MonoBehaviour {
 			
 		 	if(type == Types.Prism) MakePrism();
 			else if (type == Types.Plane) MakePlane();
+			else if (type == Types.Dome) MakeDome();
 			else mesh.Clear();
 
 			mc.enabled = false;
@@ -118,38 +116,75 @@ public class ProceduralMesh : MonoBehaviour {
 		mesh.name = "procedural mesh";
 	}
 
-	public void MakePlane(){
+	public void MakeDome(){
+		PairFloat floor = floorValues[0];
+		if (floor.divisions < 2) floor.divisions = 2;
+		int rows = floor.divisions;
+		int columns = baseNumber;
 		List<Vector3> vertices = new List<Vector3>();
-		float radius = floorValues[0].radius;
+		float radius = floor.radius;
+
+		for(int i = 0; i < rows; i++){
+			for(int j = 0; j < columns; j++){
+				float radians = j * 360f/columns * Mathf.Deg2Rad;
+				float offset = Mathf.PI*piOffset;
+
+				float x = Mathf.Cos(radians + offset)*radius* Mathf.Sin(Mathf.PI/2f*(1-i/(rows-1f)));
+				float z = Mathf.Sin(radians + offset)*radius* Mathf.Sin(Mathf.PI/2f*(1-i/(rows-1f)));
+
+				float y = floor.position.y *Mathf.Sin(Mathf.PI/2f*i/(rows-1f));
+				Vector3 vert = new Vector3(x, y, z);
+				Debug.DrawRay(vert, Vector3.forward*0.01f, Color.green);
+				//verts.Add(vert);
+			}
+		}
+		ApplyToMesh(vertices, new List<int>());
+	}
+
+	public void MakePlane(){
+		PairFloat floor = floorValues[0];
+		int rows = floor.divisions;
+		int columns = baseNumber;
+
+		List<Vector3> vertices = new List<Vector3>();
+		float radius = floor.radius;
 		for(int i = 0; i <= rows; i++){
 			for(int j = 0; j <= columns; j++){
 				vertices.Add(new Vector3(j*radius/columns, 0f, i*radius/rows));
 			}
 		}
-
 		List<int> tris = MakeTrianglesWithNextAndUp(rows, columns);
 
 		ApplyToMesh(vertices, tris);
 	}
 
 	public void MakePrism(){
+		if(baseNumber < 3) baseNumber = 3;
 		List<Vector3> vertices = new List<Vector3>();
 		//duplicate sharp floors 
-		List<PairFloat> withDuplicates = new List<PairFloat>();
+		List<PairFloat> floors = new List<PairFloat>();
 		foreach(PairFloat floor in floorValues){
-			withDuplicates.Add(floor);
+			floors.Add(floor);
+
+			if(floor.divisions > 0){
+				for (int i = 0; i < floor.divisions; i++)
+				{
+
+				}
+			}
+
 			if(floor.sharpEdge) {
 				PairFloat cpy = floor.CopyThis();
 				//disable so we can track only original floor with sharpEdge ==true and skip it
 				cpy.sharpEdge = false;
-				withDuplicates.Add(cpy);
+				floors.Add(cpy);
 			}
 		}
 
-		foreach(PairFloat floor in withDuplicates){
+		foreach(PairFloat floor in floors){
 			float radius = floor.radius;
 			if(useIncircle){
-				a = 180f/baseNumber;
+				float a = 180f/baseNumber;
 				radius = radius *Mathf.Sin(Mathf.PI/baseNumber)/ (Mathf.Tan(a * Mathf.Deg2Rad));
 			}
 			List<Vector3> baseVerts = BaseVertices(baseNumber, radius, floor.position);
@@ -176,7 +211,7 @@ public class ProceduralMesh : MonoBehaviour {
 			vertices.AddRange(baseVerts);
 		}
 
-		List<int> tris = MakeTrianglesWithNextAndUpClosed(vertices, withDuplicates);
+		List<int> tris = MakeTrianglesWithNextAndUpClosed(vertices, floors);
 
 		ApplyToMesh(vertices, tris);
 	}
@@ -274,7 +309,8 @@ public class ProceduralMesh : MonoBehaviour {
 			float offset = Mathf.PI*piOffset;
 			float x = Mathf.Cos(radians + offset)*radius;
 			float z = Mathf.Sin(radians + offset)*radius;
-			verts.Add(new Vector3 (x + position.x, position.y, z + position.z));
+			Vector3 vert = new Vector3 (x + position.x, position.y, z + position.z);
+			verts.Add(vert);
 		}
 		return verts;
 	}
@@ -356,6 +392,7 @@ public class PairFloat{
 	public bool sharpEdge;
 	public Vector3 position;
 	[Range(0, 3)] public float radius;
+	[Range(1, 64)] public int divisions;
 	public Vector3 rotation;
 	public bool freezeAxisX;
 	public bool freezeAxisY;
