@@ -121,17 +121,21 @@ public class ProceduralMesh : MonoBehaviour {
 		PairFloat floor = floorValues[0];
 		if (floor.divisions < 2) floor.divisions = 2;
 		int rows = floor.divisions;
+		if(baseNumber < 3) baseNumber = 3;
 		int columns = baseNumber;
 		List<Vector3> verts = new List<Vector3>();
 		float radius = floor.radius;
+		float circlePart = 360f - piOffset/2f*360f;
 
 		if (mirrorDome){
 			//rows -1 we skip the last since it is the first for upper part of dome
 			for(int i = 0; i < rows-1; i++){
 				for(int j = 0; j < columns; j++){
+					if(j/(columns -1f) >= circlePart) break;
+
 					int ii = rows -1 -i;
 					
-					float radians = j * 360f/columns * Mathf.Deg2Rad;
+					float radians = j *360f/columns * Mathf.Deg2Rad;
 					float offset = Mathf.PI*piOffset;
 					
 					float currentRadius = radius* Mathf.Cos(Mathf.PI/2f*(ii/(rows-1f)));
@@ -165,7 +169,7 @@ public class ProceduralMesh : MonoBehaviour {
 		}
 		if (mirrorDome) rows = 2*rows -1;
 		//rows -1 since last will get connected to first
-		List<int> tris = MakeTrianglesWithNextAndUp(rows-1, columns-1, true);
+		List<int> tris = MakeTrianglesWithNextAndUp(rows-1, columns-1, true, true);
 		ApplyToMesh(verts, tris);
 	}
 
@@ -261,7 +265,7 @@ public class ProceduralMesh : MonoBehaviour {
 		mesh.Optimize();
 	}
 
-	public List<int> MakeTrianglesWithNextAndUp(int rowNo, int colNo, bool connectLastToFirst = false){
+	public List<int> MakeTrianglesWithNextAndUp(int rowNo, int colNo, bool connectLastToFirst = false, bool closeBot = false){
 		List<int> tris = new List<int>();
 
 		for (int i = 0; i < rowNo; i++){
@@ -291,6 +295,16 @@ public class ProceduralMesh : MonoBehaviour {
 				tris.Add(k + floorCount);
 			}
 		}
+
+		//close bottom 
+		if(mirrorDome ==false && closeBot ==true){
+			for (int i = 0; i < colNo; i++){
+				tris.Add(0);
+				tris.Add(i);
+				tris.Add(i +1);
+			}
+		}
+
 		return tris;
 	}
 
