@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -108,7 +107,9 @@ public class ProceduralMesh : MonoBehaviour {
 		if(Directory.Exists(fullPath) ==false)
 			Directory.CreateDirectory(fullPath);
 		MeshToFile(mf, Application.dataPath + path + name + ".obj");
-		AssetDatabase.Refresh();
+		#if UNITY_EDITOR
+		UnityEditor.AssetDatabase.Refresh();
+		#endif
 		exportToObj = false;	
 	}
 
